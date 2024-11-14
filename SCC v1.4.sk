@@ -1,0 +1,124 @@
+# Project Simple Clear Chat With Improved tools
+# Author: Achmad Ade Nugroho
+# Version 1.4
+
+command /scc [<text>]:
+	description: Simple Clear Chat!
+	usage: &6/cc ...
+	trigger:
+		if arg 1 is not set:
+			send "&6&l*&e  SimpleClearChat Version 1.4 - Help Command!  &6&l*"
+			send "&e/scc me     : Clear your Chat!"
+			send "&e/scc public : Clear the Public Chat! &a[Admin Only]"
+			send "&e/scc lock   : Lock The Chat! &a[Admin Only]"
+			send "&e/scc alay   : Activate the Alay Mode Chat &a[Admin Only]"
+			send "&e/scc alien  : Activate the Alien Mode Chat &a[Admin Only]"
+			send "&e/scc reset  : Reset to Default Mode Chat! &a[Admin Only]"
+			send "&e/scc version : Get Information about this Plugin"
+			stop trigger
+			
+		if arg 1 is not "reset" or "public" or "p" or "l" or "me" or "lock" or "alay" or "alien" or "ver" or "version":
+			send "&4Incorrect Command! to help? type /scc!"
+		
+		if arg 1 is "version" or "ver":
+			send "&eSimple Clear Chat! Version 1.4"
+			send "&eProject by Achmad Ade Nugroho"
+			
+		if arg 1 is "reset":
+			sender doesn't have permission "sk.scc.reset":
+				send "&6* &eYou don't have permission to access the command!"
+			else:
+				delete {sk.scc.alay}
+				delete {sk.scc.alien}
+				send "&6* &eReseted Successfully! Change to Default Mode Chat!"
+		if arg 1 is "alien":
+			sender has permission "sk.scc.aliemmode":
+				{sk.scc.alay} is set:
+					send "&6* &eKamu pilih alay apa Alien Mode :v plis dech matiin AlayMode Chatmu dlu :3"
+					stop trigger
+				if {sk.scc.alien} is true:
+					delete {sk.scc.alien}
+					broadcast "&6* &eAlien Mode Turned &cOff&e by &f%sender%"
+				else:
+					set {sk.scc.alien} to true
+					broadcast "&6* &eAlien Mode Turned &aOn&e by &f%sender%"
+			else:
+				send "&6* &eYou don't have permission to access the command!"
+			
+		if arg 1 is "alay":
+			sender has permission "sk.scc.alaymode":
+				{sk.scc.alien} is set:
+					send "&6* &eKamu pilih alien apa Alay Mode :v plis dech matiin AlienMode Chatmu dlu :3"
+					stop trigger
+				if {sk.scc.alay} is true:
+					delete {sk.scc.alay}
+					broadcast "&6* &eAlay Mode Turned &cOff&e by &f%sender%"
+				else:
+					set {sk.scc.alay} to true
+					broadcast "&6* &eAlay Mode Turned &aOn&e by &f%sender%"
+			else:
+				send "&6* &eYou don't have permission to access the command!"
+		if arg 1 is "lock" or "l":
+			sender has permission "sk.scc.lockchat":
+				if {sk.scc.lock} is true:
+					delete {sk.scc.lock}
+					broadcast "&6* &eChat &aUnlocked&e by &f%sender%"
+				else:
+					set {sk.scc.lock} to true
+					broadcast "&6* &eChat &cLocked&e by &f%sender%"
+			else:
+				send "&6* &eYou don't have permission to access the command!"
+		if arg 1 is "public" or "p":
+			sender has permissions "sk.scc.public":
+				loop all players:
+					loop 150 times:
+						send ""
+					broadcast ""
+					broadcast "&6* &ePublic Chat Cleared, by %sender%"
+					broadcast ""
+					stop trigger
+			else:
+				send "&6* &eYou don't have permission to access the command!"
+				
+		if arg 1 is "me":
+			loop 150 times:
+				send ""
+			send "&6* &eSuccessfuly cleared your history chat!"
+			send ""
+
+on chat:
+	{sk.scc.lock} is true:
+		player has permission "sk.scc.lockchat":
+			stop trigger
+		else:
+			cancel event
+			send "&6* &eSorry Chat has been Locked!"
+
+# on chat:
+# 	set {_textItem} to text component from "[%name of player's tool%]"
+# 	set hover event of {_textItem} to a new hover event showing player's tool
+# 	set color format of {_textItem} to aqua
+# 	replace all "[i]" and "[item]" with {_textItem} in the message
+
+on chat:			
+	{sk.scc.alay} is true:
+		replace all "a" with "4" in the message
+		replace all "i" with "1" in the message
+		replace all "e" with "3" in the message
+		replace all "s" with "5" in the message
+		replace all "4ku" with "4kuwh" in the message
+		replace all "53l4lu" with "c3l4lu3h" in the message
+		replace all "54y4n9" with "c4y4n9 b1n9175" in the message
+		replace all "o" with "0" in the message
+		replace all "g" with "9" in the message
+		replace all "t" with "7" in the message
+
+on chat:
+	{sk.scc.alien} is true:
+		replace all "a" and "b" and "c" and "d" with "?#" in the message
+		replace all "e" and "f" and "g" with "*[" in the message
+		replace all "h" and "i" and "j" and "k" with ".>" in the message
+		replace all "l" and "m" and "n" with "$@" in the message
+		replace all "o" and "p" and "q" and "r" with "<;" in the message
+		replace all "s" and "t" and "u" with "^." in the message
+		replace all "v" and "w" and "x" and "y" and "z" with "%%+" in the message

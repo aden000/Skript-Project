@@ -1,0 +1,168 @@
+# Quiz Berhadiah 2 Milyar :/
+# Author: Achmad Ade Nugroho
+# License: MIT
+
+options:
+    minimummoney: 10000 # uang
+    tax: 10 # 100 basis point, ex: 10 -> 10/100 -> 10%
+    answertime: 60 # dalam waktu detik
+
+on join:
+    clear {quizzez::%player%::pertanyaan}
+    clear {quizzez::%player%::jawaban}
+    clear {quizzez::%player%::hadiah}
+    clear {quizzez::%player%::status}
+    # clear {quizzez::%player%::countdown}
+
+command /sendquiz:
+    executable by: player
+    trigger:
+        if {quizzez::%player%::status} is not set:
+            set {quizzez::%player%::status} to "isi-pertanyaan"
+            send "&6------------[&eLangkah 1&6]------------" to sender
+            send "&6Berikan pertanyaanmu dichat, harap diingat, pertanyaanmu harus benar dan bisa dijawab" to sender
+            send "&6Jika pertanyaanmu kami anggap hanya untuk prank, kami berhak untuk &cmemenjarakanmu" to sender
+            send "&6Ingat, &e/rules&6 masih berlaku :D" to sender
+            send "&6Untuk membatalkan, ketik command &c/cancelquiz" to sender
+        else:
+            send "&eKamu sedang menjalankan quiz, mohon menunggu hingga quiz selesai :D"
+
+command /cancelquiz:
+    executable by: player
+    trigger:
+        if {quizzez::%player%::status} is set:
+            if {quizzez::%player%::status} is not "quiz-mulai":
+                clear {quizzez::%player%::pertanyaan}
+                clear {quizzez::%player%::jawaban}
+                clear {quizzez::%player%::hadiah}
+                clear {quizzez::%player%::status}
+                send "&cPembuatan Quiz, dibatalkan :)" to player
+                # cancel event
+                stop trigger
+            else:
+                send "&cKamu tidak dapat membatalkan quiz yang sedang berjalan" to player
+                # cancel event
+                stop trigger
+
+        else:
+            send "&cKamu belum membuat kuis, gunakan &a/sendquiz &cuntuk memulai kuis :(" to player
+
+
+on chat:
+    if {quizzez::%player%::status} = "isi-pertanyaan":
+        set {quizzez::%player%::pertanyaan} to message
+        set {quizzez::%player%::status} to "isi-jawaban"
+        send "&6------------[&eLangkah 2&6]------------" to player
+        send "&aPertanyaan Disimpan: &e%{quizzez::%player%::pertanyaan}%" to player
+        send "&6Berikan jawabanmu dichat" to player
+        send "&6Jika jawabanmu kami anggap hanya untuk prank, kami berhak untuk &cmemenjarakanmu" to player
+        send "&6Ingat, &e/rules&6 masih berlaku :D" to player
+        send "&6Untuk membatalkan, ketik command &c/cancelquiz" to player
+        cancel event
+    
+    else if {quizzez::%player%::status} is "isi-jawaban":
+        set {quizzez::%player%::jawaban} to message
+        set {quizzez::%player%::status} to "hadiah"
+        send "&6------------[&eLangkah 3&6]------------" to player
+        send "&aJawaban Disimpan: &e%{quizzez::%player%::jawaban}%" to player
+        send "&6Berikan hadiahmu berupa uang jika pertanyaanmu bisa dijawab player!" to player
+        send "&6Namun kami akan menarik pajak {@tax}%% dari hadiah yang kamu berikan" to player
+        send "&6Untuk membatalkan, ketik command &c/cancelquiz" to player
+        cancel event
+
+    else if {quizzez::%player%::status} is "hadiah":
+        if message parsed as number is not a number:
+            send "&aHadiah berupa uang, pastinya harus ANGKA :)" to player
+            send "&6Untuk membatalkan, ketik command &c/cancelquiz" to player
+            cancel event
+            stop trigger
+        if message parsed as number < {@minimummoney}:
+            send "&aTidak mencapai uang minimum, masukan ${@minimummoney} atau lebih" to player
+            send "&6Untuk membatalkan, ketik command &c/cancelquiz" to player
+            cancel event
+            stop trigger
+        set {quizzez::%player%::hadiah} to message
+        set {quizzez::%player%::status} to "konfirmasi"
+        send "&6------------[&eLangkah 4&6]------------" to player
+        send "&6Pertanyaan: &a%{quizzez::%player%::pertanyaan}%" to player
+        send "&6Jawaban: &a%{quizzez::%player%::jawaban}%" to player
+        send "&6Hadiah: &a$%{quizzez::%player%::hadiah}%&6"
+        send "&6---------------------------------------" to player
+        send "&6Kami akan mengambil uang hadiahmu"
+        send "&6Ditambah pajak {@tax}%% menjadi &a$%({quizzez::%player%::hadiah} parsed as number + ({quizzez::%player%::hadiah} parsed as number * ({@tax}/100)))%"
+        send "&6Ingat, &e/rules&6 masih berlaku :D" to player
+        send "&6Untuk konfirmasi dan mulai kuis, ketik &aconfirm" to player
+        send "&6Untuk membatalkan, ketik command &c/cancelquiz" to player
+        cancel event
+
+    else if {quizzez::%player%::status} is "konfirmasi":
+        if message is "confirm":
+            # Pengambilan Uang
+            set {_takenmoneyplustax} to ({quizzez::%player%::hadiah} parsed as number + ({quizzez::%player%::hadiah} parsed as number * ({@tax}/100)))
+            if player's balance >= {_takenmoneyplustax}:
+                subtract {_takenmoneyplustax} from player's balance
+                send "&aMengambil uang sebesar $%{_takenmoneyplustax}% dari balancemu!" to player
+            else:
+                send "&cTidak ada uang $%{_takenmoneyplustax}% dari balancemu!" to player
+                send "&6Jika uangmu sudah cukup dan ingin mulai kuis, ketik &aconfirm" to player
+                send "&6Untuk membatalkan, ketik command &c/cancelquiz" to player
+                cancel event
+                stop trigger
+            # Broadcast & Mengubah Mode
+            set {quizzez::%player%::status} to "quiz-mulai"
+            set {quizzez::%player%::countdown} to {@answertime}
+            broadcast " &7- &e%player% &6Memulai kuis berhadiah &a$%{quizzez::%player%::hadiah}%! &7-"
+            broadcast ""
+            broadcast " &a%{quizzez::%player%::pertanyaan}%"
+            broadcast ""
+            broadcast " &7- &eWaktu Menjawab adalah {@answertime} detik &7-"
+            cancel event
+
+    loop all players:
+        if {quizzez::%loop-player%::status} = "quiz-mulai":
+            if message is {quizzez::%loop-player%::jawaban}:
+                if player is loop-player:
+                    send "&cKamu tidak bisa menjawab pertanyaanmu sendiri ya sayang :D"
+                    cancel event
+                    stop trigger
+                clear {quizzez::%loop-player%::status}
+                set {_time} to ({quizzez::%loop-player%::countdown} - {@answertime})
+                clear {quizzez::%loop-player%::countdown}
+                broadcast "&e%player% memenangkan quiz dari %loop-player%, dan mendapat hadiah &a$%{quizzez::%loop-player%::hadiah}%!"
+                broadcast "&e%player% menjawab quiz dengan waktu %{_time}% detik"
+                give {quizzez::%loop-player%::hadiah} parsed as number to player's balance
+                
+
+every 1 second:
+    loop indices of {quizzez::*}:
+        if {quizzez::%loop-value%::status} is "quiz-mulai":
+            subtract 1 from {quizzez::%loop-value%::countdown}
+            if {quizzez::%loop-value%::countdown} <= 0:
+                broadcast "&cTidak ada yang menjawab pertanyaan dari %offlineplayer(loop-value)%, hadiah dikembalikan + dipotong pajak"
+                clear {quizzez::%loop-value%::status}
+                give {quizzez::%loop-value%::hadiah} parsed as number to offlineplayer(loop-value)'s balance
+                clear {quizzez::%loop-value%::pertanyaan}
+                clear {quizzez::%loop-value%::jawaban}
+                clear {quizzez::%loop-value%::hadiah}
+                clear {quizzez::%loop-value%::countdown}
+                stop trigger
+            if {quizzez::%loop-value%::countdown} is 30:
+                broadcast "&eWaktu menjawab pertanyaan dari %player(loop-value)% tinggal 30 detik!"
+            if {quizzez::%loop-value%::countdown} is 15:
+                broadcast "&eWaktu menjawab pertanyaan dari %player(loop-value)% tinggal 15 detik!"
+            if {quizzez::%loop-value%::countdown} is 10:
+                broadcast "&eWaktu menjawab pertanyaan dari %player(loop-value)% tinggal 10 detik!"
+            if {quizzez::%loop-value%::countdown} <= 5:
+                broadcast "&eWaktu menjawab pertanyaan dari %player(loop-value)% tinggal %{quizzez::%loop-value%::countdown}% detik!"
+            
+            # broadcast {quizzez::%loop-value%::countdown}
+        
+                
+            
+                
+
+        
+
+
+
+    
